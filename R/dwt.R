@@ -100,7 +100,7 @@ dwt.read <- function (filename, separating_factor=1000) {
     
     bursts <- list()
     for (i in 1:(length(segs)-1)) {
-        table <- read.csv(filename, skip=segs[i], nrows=segs[i+1]-segs[i]-1, sep="\t",header=FALSE)
+        table <- read.csv(filename, skip=segs[i], nrows=segs[i+1]-segs[i]-1, sep="\t", header=FALSE)
 
         ### NOTE: Column 1 is empty, and thats how we get the spacing right.
 
@@ -125,6 +125,15 @@ dwt.read <- function (filename, separating_factor=1000) {
             warning(paste('Burst (or record)', (which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seems to have been misrecorded!'))
         else
             warning(paste('Bursts (or records)', (which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seem to have been misrecorded!'))
+    }
+
+    ## Warning Message
+    if (any(lapply(bursts, segment.check_subconductance) == TRUE)) {
+
+        if (length(which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)) == 1)
+            warning(paste('Burst (or record)', (which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)),   'has subconductive states!'))
+        else
+            warning(paste('Bursts (or records)', (which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)), 'have subconductive states!'))
     }
 
     return(bursts)

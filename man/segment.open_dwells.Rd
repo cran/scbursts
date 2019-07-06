@@ -2,7 +2,7 @@
 % Please edit documentation in R/segment.R
 \name{segment.open_dwells}
 \alias{segment.open_dwells}
-\title{Extract open dwells.}
+\title{Extract open dwells. (Any conductance greater than zero)}
 \usage{
 segment.open_dwells(segment)
 }
@@ -13,7 +13,7 @@ segment.open_dwells(segment)
 the open dwells
 }
 \description{
-Extract open dwells.
+Extract open dwells. (Any conductance greater than zero)
 }
 \examples{
 

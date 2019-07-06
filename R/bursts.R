@@ -1,3 +1,13 @@
+#' Copy a list of bursts (by value)
+#'
+#' @param bursts bursts to copy
+#' @return A copy of the bursts.
+#' @export
+bursts.copy <- function (bursts) {
+    lapply(bursts, segment.copy)
+}
+
+
 #'
 #' Divide a recording into bursts defined by a critical time.
 #' 
@@ -126,9 +136,18 @@ bursts.defined_by_tcrit <- function(segments, t_crit, units="s") {
     if (any(lapply(bursts, segment.verify) == FALSE)) {
 
         if (length(which(unlist(lapply(bursts, segment.verify)) == FALSE)) == 1)
-            warning(paste('Burst', (which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seems to have been misrecorded!'))
+            warning(paste('Burst', (which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seems to have been misrecorded!\n'))
         else
-            warning(paste('Bursts', (which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seem to have been misrecorded!'))
+            warning(paste('Bursts', toString(which(unlist(lapply(bursts, segment.verify)) == FALSE)), 'seem to have been misrecorded!\n'))
+    }
+
+        ## Warning Message
+    if (any(lapply(bursts, segment.check_subconductance) == TRUE)) {
+
+        if (length(which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)) == 1)
+            warning(paste('Burst (or record)', (which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)),   'has subconductive states!\n'))
+        else
+            warning(paste('Bursts (or records)', toString(which(unlist(lapply(bursts, segment.check_subconductance)) == TRUE)), 'have subconductive states!\n'))
     }
     
     return(bursts)
@@ -301,7 +320,7 @@ bursts.recombine <- function (bursts) {
 #' Either the factor in seconds, or a multiple of the longest observed dwell.
 #' @return The segments again, but with modified meta-data.
 #' @examples
-#' infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+#' infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 #' dwells <- dwt.read(infile)
 #'
 #' # Still a list, but the meta-data is fixed
@@ -527,3 +546,155 @@ bursts.popens <- function (bursts) {sapply(bursts, segment.popen)}
 #' @export
 bursts.pcloseds <- function (bursts) {sapply(bursts, segment.pclosed)}
 
+
+
+
+
+
+
+
+#' Return a list of all the (sub)conductance states.
+#' 
+#' @param bursts The list of all bursts
+#' @return a list of all the (sub)conductance states.
+#' @examples
+#' 
+#' infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+#' dwells <- dwt.read(infile)
+#' dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+#' bursts <- bursts.defined_by_tcrit(dwells_c, 100, units="ms")
+#' 
+#' bursts.conductance_states(bursts)
+#'
+#' @export
+bursts.conductance_states <- function (bursts) {
+    sort(unique(unlist(lapply(bursts,segment.conductance_states))))
+}
+
+
+
+
+#' Check if segment contains subconductive states
+#' 
+#' @param bursts The list of all bursts
+#' @return True if it contains an conductance other than 0 or 1, False otherwise.
+#' @examples
+#' 
+#' infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+#' dwells <- dwt.read(infile)
+#' dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+#' bursts <- bursts.defined_by_tcrit(dwells_c, 100, units="ms")
+#' 
+#' bursts.check_subconductance(bursts)
+#'
+#' @export
+bursts.check_subconductance <- function (bursts) {
+    any(sapply(bursts,segment.check_subconductance))
+}
+
+
+
+## Filter out empty bursts and reindex them
+bursts.remove_null <- function (bursts) {
+    bs <- bursts.copy(bursts)
+    filtered <- Filter(Negate(is.null), bs)
+    for (i in 1:length(filtered)) {
+        attr(filtered[[i]], "seg") <- i
+    }
+    return(filtered)
+}
+
+
+
+#' Imposes a deadtime to each segment in a burst.
+#'
+#' The user specifies a deadtime in microseconds. The function applies
+#' segment.impose_deadtime to each segment in the burst.
+#' (See segment.impose_deadtime for details.)
+#'
+#' @param  bursts a burst containing segments of dwells and states.
+#' @param  deadtime the briefest possible event in microseconds.
+#' @return A modified copy of the original burst 
+#' @examples
+#' 
+#' infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+#' dwells <- dwt.read(infile)
+#' dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+#' bursts <- bursts.defined_by_tcrit(dwells_c, 100, units="ms")
+#'
+#' bursts_d <- bursts.impose_deadtime(bursts, deadtime=0.01)
+#'
+#' @export
+bursts.impose_deadtime <- function(bursts, deadtime){
+    partial <- function(seg) { segment.impose_deadtime(seg, deadtime) }
+    adjusted <- lapply(bursts, partial)
+
+    ## Some bursts might be gone as a result of the new deadtime.
+    ## Therefore must filter out empty bursts and reindex them
+    filtered <- bursts.remove_null(adjusted)
+    return(filtered)
+}
+
+
+#' Imposes a fixed conductance level (0 or 1) to all dwells with subconductance levels to each segment in a burst
+#'
+#' The user specifies the desired level ('open' or 'closed'). The function applies
+#' segment.subconductance_as to each segment in the burst.
+#' (See segment.subconductance_as for details.)
+#'
+#' @param  bursts the list of segments
+#' @param  level either 'open' or 'closed'
+#' @return A modified copy of the original burst 
+#' @examples
+#' 
+#' infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+#' dwells <- dwt.read(infile)
+#' dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+#' bursts <- bursts.defined_by_tcrit(dwells_c, 100, units="ms")
+#'
+#' bursts_d <- bursts.subconductance_as(bursts, "open")
+#'
+#' @export
+bursts.subconductance_as <- function(bursts, level){
+
+    partial <- function (seg) { segment.subconductance_as(seg, level) } 
+    b2 <- lapply(bursts, partial)
+    filtered <- bursts.remove_null(b2)
+    return(filtered)
+
+}
+
+
+
+
+#' Transform the conductance states according to a user-defined function of conductance level.
+#'
+#' @param  bursts the list of segments
+#' @param  fun a function on conductance levels
+#' @return A modified copy of the original bursts
+#' @examples
+#' 
+#' infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+#' dwells <- dwt.read(infile)
+#' dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+#' bursts <- bursts.defined_by_tcrit(dwells_c, 100, units="ms")
+#'
+#' ### Collapse into three subconductance states
+#' fun <- function(amp) {
+#'     if (amp < 0.3)
+#'         return(0)
+#'     else if (amp >= 0.3 && amp < 0.6)
+#'         return(0.5)
+#'     else
+#'         return(1)
+#' }
+#' 
+#' bursts_d <- bursts.modify_conductance(bursts, fun)
+#'
+#' @export
+bursts.modify_conductance <- function(bursts, fun) {
+    partial <- function (x) { segment.modify_conductance(x, fun) }
+    b2 <- lapply(bursts, partial)
+    filtered <- bursts.remove_null(b2)
+    return(filtered)
+}

@@ -8,7 +8,7 @@ segment.create(states, dwells, seg = 1, start_time = 0,
   name = "burst", ignore_errors = FALSE)
 }
 \arguments{
-\item{states}{a vector of states in {0,1}}
+\item{states}{a vector of states}
 
 \item{dwells}{a vector of dwell durations (same length as states)}
 

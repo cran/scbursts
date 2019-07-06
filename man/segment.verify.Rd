@@ -13,7 +13,7 @@ segment.verify(segment)
 True if a valid segment, False otherwise
 }
 \description{
-Segments should have a very specific shape, but recordings can produce errors that make non-sensical segments. In particular, ones contain multiple consecutive openings or closings, or end in closings. This function detects whether a segment satisfies the constraint that the segment states alternate between open and closed, and begin and end with a closing.
+Segments should have a very specific shape, but recordings can produce errors that make non-sensical segments. In particular, ones contain multiple consecutive states of equal conductance, or end in closings. This function detects whether a segment satisfies the constraint that the segment conductances are not the same from one dwell to the next, and begin and end with a closing.
 }
 \examples{
 

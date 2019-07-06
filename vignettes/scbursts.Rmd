@@ -184,7 +184,7 @@ An idiosyncrasy of the package has to be mentioned: In scbursts, the scientific 
 library(scbursts)
 
 # Import a pre-packaged file (stored inside the folder extdata)
-infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 
 # Import the evt as a table
 records <- dwt.read(infile)
@@ -276,7 +276,7 @@ this is obviously *physically* impossible, but sometimes appears in the data. To
 
 ```{r, eval=TRUE, include=TRUE}
 # library(scbursts)
-infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 
 # This will raise a warning message to alert you that the data has problems
 dwells <- dwt.read(infile)
@@ -310,7 +310,7 @@ record <- bursts.recombine(records)
 The different recording segments will have a substantial amount of time between them, which should be discernible by eye. For example:
 
 ```{r, eval=TRUE, include=TRUE}
-# From example2_qub.dwt
+# From example_multiple_segments.dwt
 times  <- sapply(fixed_bursts, segment.start_time)
 popens <- sapply(fixed_bursts, segment.popen)
 
@@ -425,7 +425,7 @@ Here are example of a few common plots one might want.
 ```{r, fig.show='hold', eval=TRUE, include = TRUE}
 library(scbursts)
 
-infile <- system.file("extdata", "example2_tac.evt", package = "scbursts")
+infile <- system.file("extdata", "example1_tac.evt", package = "scbursts")
 transitions <- evt.read(infile)
 dwells <- evt.to_dwells(transitions)
 
@@ -484,7 +484,7 @@ cplot.popen_ts(bursts)
 `cplot.popen_ts` is just for convenience, you can also just just manually do the plotting. Also, `scbursts` automatically handles data that contains multiple records by inserting a comically large amount of time between records. `scbursts` issues warnings when this happens, and one should heed those warnings. The time-series data produced in this way is suitable for visualization, but **it is not suitable for fitting some types of models**. Just be wary of this.
 
 ```{r, eval=TRUE, include=TRUE}
-# From example2_qub.dwt
+# From example_multiple_segments.dwt
 times  <- sapply(fixed_bursts, segment.start_time)
 popens <- sapply(fixed_bursts, segment.popen)
 
@@ -494,6 +494,24 @@ lines(times, popens)
 ```
 
 
+
+# Subconductive States
+
+`scbursts` also has support for data with subconductive states (though on reading in a file, `scbursts` will issue a warning to inform the user that their data has subconductive states). There are tools available for visualizing the different subconductive states (`cplot.conductance_hist`) and functions for manipulating subconductive states (for instance, merging two or more states together, or removing subconductive states entirely). Some functions for this are:
+
+|        Function                |    Description                           |
+| ------------------------------ | ---------------------------------------- |
+| `segment.conductance_states`   | Get list of conductance states           |
+| `segment.check_subconductance` | Check for subconductance                 |
+| `segment.subconductance_as`    | Replace subconductive states with 0 or 1 |
+| `segment.modify_conductance`   | Remove or change conductance states      |
+| `bursts.conductance_states`    | Get list of conductance states           |
+| `bursts.check_subconductance`  | Check for subconductance                 |
+| `bursts.subconductance_as`     | Replace subconductive states with 0 or 1 |
+| `bursts.modify_conductance`    | Remove or change conductance states      |
+| `cplot.conductance_hist`       | Plot the conductance states              |
+
+An example is also below.
 
 # Example Workflows
 
@@ -593,6 +611,30 @@ head(bursts_twoplus[[1]])
 ```
 
 \nocite{*}
+
+## Example With Subconductive States
+
+```{r, fig.show='hold', eval=TRUE, include = TRUE}
+library(scbursts)
+
+infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+dwells <- dwt.read(infile)
+dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+
+bursts <- bursts.defined_by_tcrit(dwells_c,100,units='ms')
+
+bursts.conductance_states(bursts)
+
+cplot.conductance_hist(bursts)
+
+head(bursts[[1]])
+
+bursts_d <- bursts.subconductance_as(bursts, "open")
+
+head(bursts_d[[1]])
+```
+
+
 
 # References
 

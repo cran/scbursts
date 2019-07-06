@@ -19,7 +19,7 @@ The segments again, but with modified meta-data.
 Given a list of segments separated by an unknown amount of time, one may want to space the segments by some amount of time, so that they can be plotted. This function takes a separating factor, and splits up the segments by either that factor (in seconds), or that many multiples of the largest observed dwell.
 }
 \examples{
-infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 dwells <- dwt.read(infile)
 
 # Still a list, but the meta-data is fixed

@@ -56,7 +56,7 @@ head(dwells[[1]])
 library(scbursts)
 
 # Import a pre-packaged file (stored inside the folder extdata)
-infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 
 # Import the evt as a table
 records <- dwt.read(infile)
@@ -106,7 +106,7 @@ high_bursts <- bursts.select(bursts, high_popen)
 
 ## ---- eval=TRUE, include=TRUE--------------------------------------------
 # library(scbursts)
-infile <- system.file("extdata", "example2_qub.dwt", package = "scbursts")
+infile <- system.file("extdata", "example_multiple_segments.dwt", package = "scbursts")
 
 # This will raise a warning message to alert you that the data has problems
 dwells <- dwt.read(infile)
@@ -130,7 +130,7 @@ records <- bursts.space_out(records, sep_factor=1000)
 record <- bursts.recombine(records)
 
 ## ---- eval=TRUE, include=TRUE--------------------------------------------
-# From example2_qub.dwt
+# From example_multiple_segments.dwt
 times  <- sapply(fixed_bursts, segment.start_time)
 popens <- sapply(fixed_bursts, segment.popen)
 
@@ -197,7 +197,7 @@ records_c <- risetime.correct_gaussian(Tr=35.0052278,records, units="us")
 ## ---- fig.show='hold', eval=TRUE, include = TRUE-------------------------
 library(scbursts)
 
-infile <- system.file("extdata", "example2_tac.evt", package = "scbursts")
+infile <- system.file("extdata", "example1_tac.evt", package = "scbursts")
 transitions <- evt.read(infile)
 dwells <- evt.to_dwells(transitions)
 
@@ -226,7 +226,7 @@ hist(popens, xlab="Burst P(Open)", breaks=30, xlim=c(0,1))
 cplot.popen_ts(bursts)
 
 ## ---- eval=TRUE, include=TRUE--------------------------------------------
-# From example2_qub.dwt
+# From example_multiple_segments.dwt
 times  <- sapply(fixed_bursts, segment.start_time)
 popens <- sapply(fixed_bursts, segment.popen)
 
@@ -303,4 +303,23 @@ twoplus <- function(seg) {
 }
 bursts_twoplus <- bursts.select(bursts,twoplus)
 head(bursts_twoplus[[1]])
+
+## ---- fig.show='hold', eval=TRUE, include = TRUE-------------------------
+library(scbursts)
+
+infile <- system.file("extdata", "example4.dwt", package = "scbursts")
+dwells <- dwt.read(infile)
+dwells_c <- risetime.correct_gaussian(Tr=35.0052278, dwells, units="us")
+
+bursts <- bursts.defined_by_tcrit(dwells_c,100,units='ms')
+
+bursts.conductance_states(bursts)
+
+cplot.conductance_hist(bursts)
+
+head(bursts[[1]])
+
+bursts_d <- bursts.subconductance_as(bursts, "open")
+
+head(bursts_d[[1]])
 

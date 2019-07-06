@@ -4,14 +4,14 @@
 \alias{cplot.popen_ts}
 \title{Plot Time Series (ts) of P(Open).}
 \usage{
-cplot.popen_ts(bursts, main = "P(Open) Time Series", xlim = NULL)
+cplot.popen_ts(bursts, main = "P(Open) Time Series", ...)
 }
 \arguments{
 \item{bursts}{List of multiple segments}
 
 \item{main}{The title of the plot.}
 
-\item{xlim}{Pass xlim argument to plot() to focus on window of time series}
+\item{...}{Options to pass to plot}
 }
 \description{
 Plot Time Series (ts) of P(Open).
